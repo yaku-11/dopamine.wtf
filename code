@@ -1,0 +1,137 @@
+--[[ 
+    dopamine.wtf | Professional Suite 
+    STRICTLY PROTECTED - DO NOT TAMPER
+https://discord.gg/uckhxKdgXX for support
+]]
+
+-- Junk / Clutter Variables
+local _0x536b = {0x64, 0x6f, 0x70, 0x61, 0x6d, 0x69, 0x6e, 0x65, 0x2e, 0x77, 0x74, 0x66}
+local _v1 = "init_system_v1"
+local _v2 = math.random(100, 999)
+local _mangled = function(a,b) return a + b * 0 end
+
+-- De-obfuscate name
+local function _get_name() local s = "" for i,v in pairs(_0x536b) do s = s .. string.char(v) end return s end
+local _script_id = _get_name()
+
+-- Load UI Lib (Rayfield)
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- // Main Window Generation \\ --
+local Window = Rayfield:CreateWindow({
+   Name = _script_id,
+   LoadingTitle = "Initializing " .. _script_id,
+   LoadingSubtitle = "Preparing local environment...",
+   ConfigurationSaving = {Enabled = true, FolderName = "Dopamine", FileName = "Config"},
+   KeySystem = false,
+})
+
+-- // STARFALL BACKGROUND & THEME \\ --
+Window:ModifyTheme({
+    ["Main"] = Color3.fromRGB(5, 5, 15),
+    ["Accent"] = Color3.fromRGB(0, 50, 200),
+    ["Section"] = Color3.fromRGB(10, 10, 25),
+})
+
+-- Junk logic loop to confuse readers
+task.spawn(function() while true do local _x = _mangled(1,2) task.wait(9999) end end)
+
+-- // SERVICES \\ --
+local _S = setmetatable({}, {__index = function(t, k) return game:GetService(k) end})
+local Players = _S.Players
+local RunService = _S.RunService
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+local Camera = workspace.CurrentCamera
+
+-- State Table (Mangled keys)
+local _Settings = {
+    _A_1 = false, -- Aim Enabled
+    _A_2 = true,  -- Team Check
+    _A_3 = false, -- FOV Circle
+    _A_4 = 100,   -- Rad
+    _A_5 = 1,     -- Smooth
+    _V_1 = false, -- ESP
+    _M_1 = false, -- AutoClick
+    _M_2 = false  -- Fly
+}
+
+-- // DYNAMIC PROFILE (Bottom Left) \\ --
+local ProfileTab = Window:CreateTab("User Profile", 4483362458)
+ProfileTab:CreateLabel("Session: " .. LocalPlayer.DisplayName)
+ProfileTab:CreateLabel("UID: " .. LocalPlayer.UserId)
+ProfileTab:CreateLabel("Status: Authenticated")
+
+-- // TABS \\ --
+local AimTab = Window:CreateTab("Aim", 4483362458)
+local VisualsTab = Window:CreateTab("Visuals", 4483362458)
+local MiscTab = Window:CreateTab("Misc", 4483362458)
+local SettingsTab = Window:CreateTab("Settings", 4483362458)
+
+-- // AIM SECTION \\ --
+AimTab:CreateToggle({Name = "Enable Aimbot", Callback = function(v) _Settings._A_1 = v end})
+AimTab:CreateToggle({Name = "Team Check", CurrentValue = true, Callback = function(v) _Settings._A_2 = v end})
+AimTab:CreateToggle({Name = "Show FOV Circle", Callback = function(v) _Settings._A_3 = v end})
+AimTab:CreateSlider({Name = "FOV Radius", Range = {10, 600}, Increment = 1, CurrentValue = 100, Callback = function(v) _Settings._A_4 = v end})
+AimTab:CreateSlider({Name = "Smoothness", Range = {1, 15}, Increment = 0.1, CurrentValue = 1, Callback = function(v) _Settings._A_5 = v end})
+AimTab:CreateToggle({Name = "TriggerBot", Callback = function(v) --[[ Trigger Logic ]] end})
+
+-- // VISUALS SECTION \\ --
+VisualsTab:CreateToggle({Name = "Enable ESP", Callback = function(v) _Settings._V_1 = v end})
+VisualsTab:CreateToggle({Name = "Box ESP", Callback = function(v) --[[ Box Logic ]] end})
+VisualsTab:CreateToggle({Name = "Skeleton ESP", Callback = function(v) --[[ Skeleton Logic ]] end})
+VisualsTab:CreateColorPicker({Name = "Theme Color", Color = Color3.fromRGB(0, 100, 255), Callback = function() end})
+
+-- // MISC SECTION \\ --
+MiscTab:CreateToggle({Name = "Auto Clicker", Callback = function(v) _Settings._M_1 = v end})
+MiscTab:CreateToggle({Name = "Fly (V)", Callback = function(v) _Settings._M_2 = v end})
+
+-- // SETTINGS \\ --
+SettingsTab:CreateKeybind({
+   Name = "Menu Key",
+   CurrentKeybind = "RightShift",
+   Callback = function() -- Lib handles toggle automatically
+   end,
+})
+
+-- // CORE LOGIC \\ --
+local _FOV_CIRC = Drawing.new("Circle")
+_FOV_CIRC.Thickness = 2
+_FOV_CIRC.Color = Color3.fromRGB(0, 100, 255)
+
+local function _find_target()
+    local t = nil
+    local dist = _Settings._A_4
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            if _Settings._A_2 and p.Team == LocalPlayer.Team then continue end
+            local pos, vis = Camera:WorldToViewportPoint(p.Character.HumanoidRootPart.Position)
+            if vis then
+                local mag = (Vector2.new(pos.X, pos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
+                if mag < dist then t = p dist = mag end
+            end
+        end
+    end
+    return t
+end
+
+RunService.RenderStepped:Connect(function()
+    _FOV_CIRC.Visible = _Settings._A_3
+    _FOV_CIRC.Radius = _Settings._A_4
+    _FOV_CIRC.Position = Vector2.new(Mouse.X, Mouse.Y + 36)
+
+    if _Settings._A_1 and _S.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+        local target = _find_target()
+        if target then
+            local pos = Camera:WorldToViewportPoint(target.Character.HumanoidRootPart.Position)
+            mousemoverel((pos.X - Mouse.X) / _Settings._A_5, (pos.Y - Mouse.Y) / _Settings._A_5)
+        end
+    end
+    
+    if _Settings._M_1 then
+        mouse1click()
+        task.wait(0.01)
+    end
+end)
+
+Rayfield:Notify({Title = "Success", Content = "dopamine.wtf loaded for " .. LocalPlayer.Name})
